@@ -1,4 +1,3 @@
-// App.tsx
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -20,8 +19,12 @@ const App = () => {
             component={AlarmListScreen} 
             options={{ headerShown: false }} // 헤더 숨기기
           />
-          <Stack.Screen name="AddAlarm" component={AddAlarmScreen} />
-          <Stack.Screen name="EditAlarm" component={EditAlarmScreen} />
+          <Stack.Screen 
+            name="AddAlarm" 
+            component={AddAlarmScreen} 
+            options={{ headerShown: false }} // AddAlarm 화면으로 이동
+          />
+          <Stack.Screen name="EditAlarm" component={EditAlarmScreen} options={{ headerShown: false }} />
         </Stack.Navigator>
       </NavigationContainer>
     </AlarmProvider>

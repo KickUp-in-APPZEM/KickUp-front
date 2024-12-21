@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Alert, TouchableOpacity, StyleSheet, Switch, ImageBackground, Image, Animated, Easing } from 'react-native';
+import { View, Text, FlatList, Alert, TouchableOpacity, StyleSheet, Switch, ImageBackground, Image, Animated, Easing, Vibration } from 'react-native';
+import { Audio } from 'expo-av'; // 소리 재생을 위한 추가
 import { useAlarms } from '../context/AlarmContext';
+import AddAlarmModal from './AddAlarmScreen'; // AddAlarmModal import
 
 const AlarmListScreen = ({ navigation }: any) => {
   const { alarms, setAlarms, toggleAlarm, deleteAlarm } = useAlarms();
-  const [loading, setLoading] = useState(false); // 로딩 상태 추가
-  const [menuVisible, setMenuVisible] = useState(false); // 메뉴 표시 상태
-  const menuAnimation = useState(new Animated.Value(-200))[0]; // 메뉴 애니메이션 상태
+  const [loading, setLoading] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const menuAnimation = useState(new Animated.Value(-200))[0];
   const [contentTranslateY, setContentTranslateY] = useState(new Animated.Value(0));
 
+  const [isAddAlarmModalVisible, setAddAlarmModalVisible] = useState(false);
+
   useEffect(() => {
-    fetchAlarms(); // 화면이 로드될 때 알람 목록을 불러옵니다.
+    fetchAlarms();
   }, []);
 
   useEffect(() => {
@@ -29,15 +33,14 @@ const AlarmListScreen = ({ navigation }: any) => {
     }).start();
   }, [menuVisible]);
 
-  // 알람 목록을 서버에서 가져오는 함수
   const fetchAlarms = async () => {
-    setLoading(true); // 데이터 로딩 시작
+    setLoading(true);
     try {
-      const response = await fetch('https://port-0-appzem-m1qhzohka7273c65.sel4.cloudtype.app/Alarm'); // 실제 API URL로 수정
+      const response = await fetch('https://port-0-appzem-m1qhzohka7273c65.sel4.cloudtype.app/Alarm');
       const data = await response.json();
 
       if (response.ok) {
-        setAlarms(data); // 받아온 데이터를 상태에 저장
+        setAlarms(data);
       } else {
         Alert.alert('알람 목록 불러오기 실패', '알람 목록을 불러올 수 없습니다.');
       }
@@ -45,11 +48,10 @@ const AlarmListScreen = ({ navigation }: any) => {
       console.error(error);
       Alert.alert('알람 목록 불러오기 실패', '서버와의 연결에 실패했습니다.');
     } finally {
-      setLoading(false); // 데이터 로딩 완료
+      setLoading(false);
     }
   };
 
-  // 알람 삭제 함수
   const handleDelete = (id: string) => {
     Alert.alert(
       '알람 삭제',
@@ -62,14 +64,15 @@ const AlarmListScreen = ({ navigation }: any) => {
           onPress: async () => {
             try {
               const response = await fetch(`https://port-0-appzem-m1qhzohka7273c65.sel4.cloudtype.app/Alarm/${id}`, {
-                method: 'DELETE', // DELETE 메서드로 요청 보내기
+                method: 'DELETE',
                 headers: {
                   'Content-Type': 'application/json',
                 },
               });
 
               if (response.ok) {
-                fetchAlarms(); // 삭제 후 알람 목록 다시 불러오기
+                fetchAlarms();
+                Alert.alert('알람 삭제', '알람이 삭제되었습니다.');
               } else {
                 Alert.alert('알람 삭제 실패', '알람을 삭제할 수 없습니다.');
               }
@@ -83,7 +86,6 @@ const AlarmListScreen = ({ navigation }: any) => {
     );
   };
 
-  // 알람 활성화/비활성화 함수
   const handleToggle = async (id: string, currentStatus: boolean) => {
     const updatedStatus = !currentStatus;
 
@@ -94,12 +96,13 @@ const AlarmListScreen = ({ navigation }: any) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          active: updatedStatus, // 활성화 상태를 변경
+          active: updatedStatus,
         }),
       });
 
       if (response.ok) {
-        toggleAlarm(id); // 상태 변경
+        toggleAlarm(id);
+        Alert.alert('알람 상태 변경', updatedStatus ? '알람이 활성화되었습니다.' : '알람이 비활성화되었습니다.');
       } else {
         Alert.alert('알람 상태 변경 실패', '알람 상태를 변경할 수 없습니다.');
       }
@@ -112,7 +115,7 @@ const AlarmListScreen = ({ navigation }: any) => {
   const renderAlarm = ({ item }: any) => (
     <TouchableOpacity
       style={styles.alarmItem}
-      onPress={() => navigation.navigate('EditAlarm', { alarm: item })} // 알람을 눌렀을 때 수정 화면으로 이동
+      onPress={() => navigation.navigate('EditAlarm', { alarm: item })}
     >
       <View style={styles.alarmInfo}>
         <Text style={styles.alarmTitle}>{item.title}</Text>
@@ -135,10 +138,11 @@ const AlarmListScreen = ({ navigation }: any) => {
       </View>
     </TouchableOpacity>
   );
+
   const MainPress = () => {
-    navigation.navigate('AlarmList'); // 'AlarmScreen'으로 네비게이션
+    navigation.navigate('AlarmList');
   };
-  
+
   return (
     <ImageBackground source={require('../assets/dark.png')} style={styles.backgroundImage}>
       <View style={styles.header}>
@@ -148,34 +152,41 @@ const AlarmListScreen = ({ navigation }: any) => {
           </TouchableOpacity>
         )}
       </View>
-  
+
       {menuVisible && (
         <TouchableOpacity
           style={styles.menuOverlay}
           onPress={() => setMenuVisible(false)}
         >
-          <Animated.View style={[styles.menuContainer, { transform: [{ translateY: menuAnimation }] }]}>
+          <Animated.View style={[styles.menuContainer, { transform: [{ translateY: menuAnimation }] }]}>            
             <TouchableOpacity
               style={styles.menuButton}
-              onPress={() => navigation.navigate('AddAlarm')} // 'AddAlarm' 화면으로 이동
+              onPress={() => {
+                setMenuVisible(false);
+                setAddAlarmModalVisible(true);
+              }}
             >
               <Image source={require('../assets/watch.png')} style={styles.watchIcon} />
-              <Text style={styles.menuButtonText}>알람</Text>
+              <Text style={styles.menuButtonText}>알람 추가</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.backgroundButton}
-              onPress={() => navigation.navigate('AddAlarm')} // 'AddAlarm' 화면으로 이동
+              onPress={() => {
+                setMenuVisible(false);
+                setTimeout(() => {
+                  navigation.navigate('BackgroundSettings');
+                }, 300);
+              }}
             >
               <Image source={require('../assets/backgroundchange.png')} style={styles.backgroundIcon} />
               <Text style={styles.menuButtonText}>배경설정</Text>
             </TouchableOpacity>
           </Animated.View>
-
         </TouchableOpacity>
       )}
-  
-      <Animated.View style={[styles.containerWithMargin, { transform: [{ translateY: contentTranslateY }] }]}>
+
+      <Animated.View style={[styles.containerWithMargin, { transform: [{ translateY: contentTranslateY }] }]}>        
         {loading ? (
           <Text style={styles.emptyText}>알람 목록을 불러오는 중...</Text>
         ) : alarms.length === 0 ? (
@@ -188,7 +199,7 @@ const AlarmListScreen = ({ navigation }: any) => {
           />
         )}
       </Animated.View>
-  
+
       <View style={styles.fixedFooter}>
         <TouchableOpacity style={styles.footerButton} onPress={MainPress}>
           <View style={styles.footerBar} />
@@ -199,12 +210,85 @@ const AlarmListScreen = ({ navigation }: any) => {
           <Text style={styles.footerText}>캐릭터</Text>
         </TouchableOpacity>
       </View>
+
+      {/* AddAlarmModal 모달을 여는 부분 */}
+      <AddAlarmModal
+        isVisible={isAddAlarmModalVisible}
+        onClose={() => setAddAlarmModalVisible(false)}
+        onAddAlarm={() => fetchAlarms()}
+      />
+
+      {/* 알람 트리거 추가 */}
+      <AlarmTrigger alarms={alarms} />
     </ImageBackground>
   );
-  
-  
 };
 
+// 알람 트리거 컴포넌트 추가
+const AlarmTrigger = ({ alarms }: { alarms: any[] }) => {
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+
+  const loadSound = async () => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(require('../assets/music.mp3'));
+      setSound(sound);
+    } catch (error) {
+      console.error('소리 로드 실패:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadSound();
+    const checkAlarmInterval = setInterval(checkAlarms, 1000);
+
+    return () => {
+      clearInterval(checkAlarmInterval);
+      if (sound) sound.unloadAsync();
+    };
+  }, [alarms]);
+
+  const checkAlarms = () => {
+    const now = new Date();
+    const nowHours = now.getHours();
+    const nowMinutes = now.getMinutes();
+  
+    alarms.forEach((alarm) => {
+      // 알람 시간 파싱
+      const [hour, minute] = alarm.time.split(':').map(Number);
+      const isAM = alarm.time.includes('AM');
+      const alarmHour = isAM ? (hour % 12) : (hour % 12) + 12; // 12:00 AM = 0시, 12:00 PM = 12시
+      const alarmMinute = minute;
+  
+      // 알람 활성 상태와 시간 비교
+      if (
+        alarm.active &&
+        nowHours === alarmHour &&
+        nowMinutes === alarmMinute &&
+        !alarm.triggered // 중복 방지를 위해 추가 상태
+      ) {
+        triggerAlarm(alarm);
+  
+        // 알람이 울린 상태를 기록
+        alarm.triggered = true;
+        setTimeout(() => (alarm.triggered = false), 60000); // 1분 후 다시 울릴 수 있도록 상태 초기화
+      }
+    });
+  };
+  
+  const triggerAlarm = async (alarm: any) => {
+    Alert.alert('알람', `${alarm.title} 시간이 되었습니다!`);
+    Vibration.vibrate([500, 500, 500]); // 진동 패턴
+    if (sound) {
+      try {
+        await sound.replayAsync(); // 알람 소리 재생
+      } catch (error) {
+        console.error('알람 소리 재생 중 오류:', error);
+      }
+    }
+  };
+}  
+
+  
 const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
