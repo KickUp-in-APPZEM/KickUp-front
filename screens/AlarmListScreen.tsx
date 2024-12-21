@@ -4,6 +4,7 @@ import { Audio } from 'expo-av'; // 소리 재생을 위한 추가
 import { useAlarms } from '../context/AlarmContext';
 import AddAlarmModal from './AddAlarmScreen'; // AddAlarmModal import
 
+
 const AlarmListScreen = ({ navigation }: any) => {
   const { alarms, setAlarms, toggleAlarm, deleteAlarm } = useAlarms();
   const [loading, setLoading] = useState(false);
@@ -228,6 +229,7 @@ const AlarmListScreen = ({ navigation }: any) => {
 const AlarmTrigger = ({ alarms }: { alarms: any[] }) => {
   const [sound, setSound] = useState<Audio.Sound | null>(null);
 
+  // 소리 로드
   const loadSound = async () => {
     try {
       const { sound } = await Audio.Sound.createAsync(require('../assets/music.mp3'));
@@ -239,56 +241,46 @@ const AlarmTrigger = ({ alarms }: { alarms: any[] }) => {
 
   useEffect(() => {
     loadSound();
-    const checkAlarmInterval = setInterval(checkAlarms, 1000);
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      const currentHours = now.getHours();
+      const currentMinutes = now.getMinutes();
+
+      for (const alarm of alarms) {
+        const [alarmHours, alarmMinutes] = alarm.time.split(':').map(Number);
+
+        if (
+          alarm.active && // 알람이 활성화되어 있고
+          currentHours === alarmHours && // 현재 시간이 알람 시간과 같으며
+          currentMinutes === alarmMinutes // 현재 분이 알람 분과 같을 때
+        ) {
+          triggerAlarm(alarm);
+        }
+      }
+    }, 50000); // 10초마다 실행
 
     return () => {
-      clearInterval(checkAlarmInterval);
-      if (sound) sound.unloadAsync();
+      clearInterval(interval);
+      if (sound) sound.unloadAsync(); // 컴포넌트 언마운트 시 소리 해제
     };
   }, [alarms]);
 
-  const checkAlarms = () => {
-    const now = new Date();
-    const nowHours = now.getHours();
-    const nowMinutes = now.getMinutes();
-  
-    alarms.forEach((alarm) => {
-      // 알람 시간 파싱
-      const [hour, minute] = alarm.time.split(':').map(Number);
-      const isAM = alarm.time.includes('AM');
-      const alarmHour = isAM ? (hour % 12) : (hour % 12) + 12; // 12:00 AM = 0시, 12:00 PM = 12시
-      const alarmMinute = minute;
-  
-      // 알람 활성 상태와 시간 비교
-      if (
-        alarm.active &&
-        nowHours === alarmHour &&
-        nowMinutes === alarmMinute &&
-        !alarm.triggered // 중복 방지를 위해 추가 상태
-      ) {
-        triggerAlarm(alarm);
-  
-        // 알람이 울린 상태를 기록
-        alarm.triggered = true;
-        setTimeout(() => (alarm.triggered = false), 60000); // 1분 후 다시 울릴 수 있도록 상태 초기화
-      }
-    });
-  };
-  
   const triggerAlarm = async (alarm: any) => {
-    Alert.alert('알람', `${alarm.title} 시간이 되었습니다!`);
-    Vibration.vibrate([500, 500, 500]); // 진동 패턴
-    if (sound) {
-      try {
-        await sound.replayAsync(); // 알람 소리 재생
-      } catch (error) {
-        console.error('알람 소리 재생 중 오류:', error);
+    try {
+      Alert.alert('알람', `${alarm.title} 시간이 되었습니다!`);
+      Vibration.vibrate([5000, 5000, 5000]); // 진동 패턴
+      if (sound) {
+        await sound.replayAsync(); // 소리 재생
       }
+    } catch (error) {
+      console.error('알람 트리거 실패:', error);
     }
   };
-}  
 
-  
+  return null; // UI가 없는 컴포넌트
+};
+
 const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
