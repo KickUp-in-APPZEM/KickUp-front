@@ -14,8 +14,12 @@ const App = () => {
   return (
     <AlarmProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="AlarmList">
-          <Stack.Screen name="AlarmList" component={AlarmListScreen} />
+        <Stack.Navigator>
+          <Stack.Screen 
+            name="AlarmList" 
+            component={AlarmListScreen} 
+            options={{ headerShown: false }} // 헤더 숨기기
+          />
           <Stack.Screen name="AddAlarm" component={AddAlarmScreen} />
           <Stack.Screen name="EditAlarm" component={EditAlarmScreen} />
         </Stack.Navigator>
