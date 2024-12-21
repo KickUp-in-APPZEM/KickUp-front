@@ -1,19 +1,23 @@
+// App.tsx
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import AlarmListScreen from './screens/AlarmListScreen';  // AlarmListScreen 컴포넌트 임포트
-import AddAlarmScreen from './screens/AddAlarmScreen';  // AddAlarmScreen 컴포넌트 임포트
-import AlarmProvider from './context/AlarmContext';  // AlarmProvider 임포트
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import AlarmProvider from './context/AlarmContext'; // 경로 확인
 
-const Stack = createStackNavigator();
+import AlarmListScreen from './screens/AlarmListScreen';
+import AddAlarmScreen from './screens/AddAlarmScreen';
+import EditAlarmScreen from './screens/EditAlarmScreen';
+
+const Stack = createNativeStackNavigator();
 
 const App = () => {
   return (
-    <AlarmProvider>  {/* AlarmProvider로 감싸기 */}
+    <AlarmProvider>
       <NavigationContainer>
         <Stack.Navigator initialRouteName="AlarmList">
           <Stack.Screen name="AlarmList" component={AlarmListScreen} />
           <Stack.Screen name="AddAlarm" component={AddAlarmScreen} />
+          <Stack.Screen name="EditAlarm" component={EditAlarmScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </AlarmProvider>

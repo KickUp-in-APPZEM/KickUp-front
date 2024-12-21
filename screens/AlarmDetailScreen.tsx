@@ -1,16 +1,17 @@
-// screens/EditAlarmScreen.tsx
+// AlarmDetailScreen.tsx
+
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { useAlarms } from '../context/AlarmContext';
 
-const EditAlarmScreen = ({ route, navigation }: any) => {
-  const { id } = route.params;
+const AlarmDetailScreen = ({ route, navigation }: any) => {
   const { alarms, setAlarms } = useAlarms();
+  const { id } = route.params;  // 선택된 알람의 ID
   const [title, setTitle] = useState('');
   const [time, setTime] = useState('');
 
   useEffect(() => {
-    const alarm = alarms.find((alarm) => alarm.id === id);
+    const alarm = alarms.find((alarm: any) => alarm.id === id);
     if (alarm) {
       setTitle(alarm.title);
       setTime(alarm.time);
@@ -26,16 +27,17 @@ const EditAlarmScreen = ({ route, navigation }: any) => {
         },
         body: JSON.stringify({
           title,
-          time: `${time}:00`,
+          time: `${time}:00`,  // 초는 00으로 고정
         }),
       });
 
       if (response.ok) {
         Alert.alert('수정 완료', '알람이 성공적으로 수정되었습니다.');
+        // 수정 후 알람 목록을 다시 가져오기
         const updatedAlarms = await fetch('https://port-0-appzem-m1qhzohka7273c65.sel4.cloudtype.app/Alarm');
         const data = await updatedAlarms.json();
         setAlarms(data);
-        navigation.goBack();
+        navigation.goBack();  // 이전 화면으로 돌아가기
       } else {
         Alert.alert('수정 실패', '알람 수정에 실패했습니다.');
       }
@@ -88,4 +90,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EditAlarmScreen;
+export default AlarmDetailScreen;
