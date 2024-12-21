@@ -1,20 +1,23 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import AlarmListScreen from './screens/AlarmListScreen';  // AlarmListScreen 컴포넌트 임포트
+import AddAlarmScreen from './screens/AddAlarmScreen';  // AddAlarmScreen 컴포넌트 임포트
+import AlarmProvider from './context/AlarmContext';  // AlarmProvider 임포트
 
-export default function App() {
+const Stack = createStackNavigator();
+
+const App = () => {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <AlarmProvider>  {/* AlarmProvider로 감싸기 */}
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="AlarmList">
+          <Stack.Screen name="AlarmList" component={AlarmListScreen} />
+          <Stack.Screen name="AddAlarm" component={AddAlarmScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </AlarmProvider>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default App;
